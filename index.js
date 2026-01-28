@@ -3,7 +3,12 @@ const {
   GatewayIntentBits 
 } = require("discord.js");
 
-const { joinVoiceChannel } = require("@discordjs/voice");
+const {
+  joinVoiceChannel,
+  createAudioPlayer,
+  createAudioResource,
+  AudioPlayerStatus,
+} = require("@discordjs/voice");
 
 const client = new Client({
   intents: [
@@ -14,31 +19,38 @@ const client = new Client({
   ],
 });
 
+const RADIO_URL = "http://103.246.184.62:1935/noice_genfm/genfm/playlist.m3u8";
+
 client.once("ready", () => {
   console.log(`BOT READY: ${client.user.tag}`);
 });
 
 client.on("messageCreate", async (message) => {
-  console.log("MESSAGE MASUK:", message.content);
-
   if (message.author.bot) return;
 
-  if (message.content === "!ping") {
-    await message.reply("pong 🏓");
-  }
-
-  if (message.content === "!join") {
+  if (message.content === "!radio") {
     if (!message.member.voice.channel) {
       return message.reply("Masuk voice dulu");
     }
 
-    joinVoiceChannel({
+    const connection = joinVoiceChannel({
       channelId: message.member.voice.channel.id,
       guildId: message.guild.id,
       adapterCreator: message.guild.voiceAdapterCreator,
     });
 
-    await message.reply("Bot masuk voice ✅");
+    const player = createAudioPlayer();
+
+    const resource = createAudioResource(RADIO_URL, {
+      inlineVolume: true
+    });
+
+    resource.volume.setVolume(1);
+
+    player.play(resource);
+    connection.subscribe(player);
+
+    message.reply("📻 Oink Radio GenFM diputar!");
   }
 });
 
