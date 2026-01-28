@@ -49,3 +49,21 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(process.env.DISCORD_TOKEN);
+
+const { joinVoiceChannel } = require("@discordjs/voice");
+
+client.on("messageCreate", async (message) => {
+  if (message.content === "!join") {
+    if (!message.member.voice.channel) {
+      return message.reply("Masuk voice dulu");
+    }
+
+    joinVoiceChannel({
+      channelId: message.member.voice.channel.id,
+      guildId: message.guild.id,
+      adapterCreator: message.guild.voiceAdapterCreator,
+    });
+
+    message.reply("Bot masuk voice ✅");
+  }
+});
