@@ -1,67 +1,59 @@
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits } = require("discord.js");
 const {
   joinVoiceChannel,
   createAudioPlayer,
   createAudioResource,
   AudioPlayerStatus
-} = require('@discordjs/voice');
+} = require("@discordjs/voice");
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildVoiceStates
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
   ]
 });
 
-// ====== CONFIG ======
-const RADIO_URL = 'http://n09.radiojar.com/7csmg90fuqruv.mp3';
-const GUILD_ID = process.env.GUILD_ID;
-const VOICE_CHANNEL_ID = process.env.VOICE_CHANNEL_ID;
-// ====================
+const STREAM_URL = "http://n09.radiojar.com/7csmg90fuqruv.mp3";
 
-let connection;
-const player = createAudioPlayer();
-
-function playRadio() {
-  const resource = createAudioResource(RADIO_URL, {
-    inlineVolume: true
-  });
-
-  resource.volume.setVolume(1);
-  player.play(resource);
-
-  if (connection) {
-    connection.subscribe(player);
-  }
-
-  console.log('📻 Radio playing...');
-}
-
-function connectVoice() {
-  const guild = client.guilds.cache.get(GUILD_ID);
-  if (!guild) return console.log('❌ Guild not found');
-
-  const channel = guild.channels.cache.get(VOICE_CHANNEL_ID);
-  if (!channel) return console.log('❌ Voice channel not found');
-
-  connection = joinVoiceChannel({
-    channelId: channel.id,
-    guildId: guild.id,
-    adapterCreator: guild.voiceAdapterCreator
-  });
-
-  playRadio();
-}
-
-// auto reconnect
-player.on(AudioPlayerStatus.Idle, () => {
-  console.log('🔄 Restarting radio...');
-  playRadio();
-});
-
-client.once('ready', () => {
+client.once("ready", () => {
   console.log(`BOT READY: ${client.user.tag}`);
-  connectVoice();
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.on("messageCreate", async (message) => {
+  if (message.content === "!radio") {
+    const channel = message.member.voice.channel;
+    if (!channel) return message.reply("Masuk voice dulu.");
+
+    const connection = joinVoiceChannel({
+      channelId: channel.id,
+      guildId: message.guild.id,
+      adapterCreator: message.guild.voiceAdapterCreator,
+      selfDeaf: false
+    });
+
+    const player = createAudioPlayer();
+
+    const resource = createAudioResource(STREAM_URL, {
+      inlineVolume: true
+    });
+
+    resource.volume.setVolume(1);
+
+    player.play(resource);
+    connection.subscribe(player);
+
+    player.on(AudioPlayerStatus.Playing, () => {
+      console.log("🔊 Radio is playing");
+    });
+
+    player.on("error", error => {
+      console.error("Audio error:", error);
+    });
+
+    message.reply("📻 Radio ON (24 jam)");
+  }
+});
+
+client.login("TOKEN_BOT_KAMU");
