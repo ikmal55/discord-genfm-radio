@@ -1,17 +1,21 @@
-const { Client, Intents } = require("discord.js");
+const { 
+  Client, 
+  GatewayIntentBits 
+} = require("discord.js");
+
 const { joinVoiceChannel } = require("@discordjs/voice");
 
 const client = new Client({
   intents: [
-    Intents.FLAGS.GUILDS,
-    Intents.FLAGS.GUILD_MESSAGES,
-    Intents.FLAGS.GUILD_VOICE_STATES,
-    Intents.FLAGS.MESSAGE_CONTENT
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates,
   ],
 });
 
 client.once("ready", () => {
-  console.log("BOT READY:", client.user.tag);
+  console.log(`BOT READY: ${client.user.tag}`);
 });
 
 client.on("messageCreate", async (message) => {
@@ -20,7 +24,7 @@ client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
   if (message.content === "!ping") {
-    message.reply("pong 🏓");
+    await message.reply("pong 🏓");
   }
 
   if (message.content === "!join") {
@@ -34,7 +38,7 @@ client.on("messageCreate", async (message) => {
       adapterCreator: message.guild.voiceAdapterCreator,
     });
 
-    message.reply("Bot masuk voice ✅");
+    await message.reply("Bot masuk voice ✅");
   }
 });
 
