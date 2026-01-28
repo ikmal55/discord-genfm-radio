@@ -1,77 +1,54 @@
-const {
-  Client,
-  GatewayIntentBits
-} = require("discord.js");
-
+const { Client, GatewayIntentBits } = require('discord.js');
 const {
   joinVoiceChannel,
   createAudioPlayer,
   createAudioResource,
   AudioPlayerStatus
-} = require("@discordjs/voice");
-
-const prism = require("prism-media");
-
-// ================= CONFIG =================
-const TOKEN = process.env.TOKEN;
-const RADIO_URL = "http://103.246.184.62:1935/noice_genfm/genfm/playlist.m3u8";
-// ==========================================
+} = require('@discordjs/voice');
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildVoiceStates,
-  ],
+    GatewayIntentBits.GuildVoiceStates
+  ]
 });
 
-client.once("ready", () => {
+const RADIO_URL = 'http://n09.radiojar.com/7csmg90fuqruv.mp3';
+
+const player = createAudioPlayer();
+
+client.once('ready', () => {
   console.log(`BOT READY: ${client.user.tag}`);
 });
 
-client.on("messageCreate", async (message) => {
+client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
-  // TEST BOT HIDUP
-  if (message.content === "!ping") {
-    return message.reply("pong 🏓");
-  }
-
-  // PLAY RADIO
-  if (message.content === "!radio") {
-    if (!message.member.voice.channel) {
-      return message.reply("Masuk voice dulu ya 🎧");
+  if (message.content === '!radio') {
+    const voiceChannel = message.member.voice.channel;
+    if (!voiceChannel) {
+      return message.reply('masuk voice dulu ya 🎧');
     }
 
     const connection = joinVoiceChannel({
-      channelId: message.member.voice.channel.id,
+      channelId: voiceChannel.id,
       guildId: message.guild.id,
-      adapterCreator: message.guild.voiceAdapterCreator,
-      selfDeaf: false
+      adapterCreator: message.guild.voiceAdapterCreator
     });
 
-    const player = createAudioPlayer();
-
-    const ffmpeg = new prism.FFmpeg({
-      args: [
-        "-re",
-        "-i", RADIO_URL,
-        "-analyzeduration", "0",
-        "-loglevel", "0",
-        "-f", "s16le",
-        "-ar", "48000",
-        "-ac", "2"
-      ]
-    });
-
-    const resource = createAudioResource(ffmpeg);
-
+    const resource = createAudioResource(RADIO_URL);
     player.play(resource);
     connection.subscribe(player);
 
-    message.reply("📻 Oink Radio GenFM ON AIR!");
+    message.reply('📻 Radio ON!');
+  }
+
+  if (message.content === '!stop') {
+    player.stop();
+    message.reply('⛔ Radio OFF');
   }
 });
 
-client.login(TOKEN);
+client.login(process.env.DISCORD_TOKEN);
