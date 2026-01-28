@@ -30,7 +30,7 @@ client.on("raw", d => manager.updateVoiceState(d));
 
 client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
-  if (interaction.commandName !== "radio") return;
+  if (interaction.commandName !== "oinkradio") return;
 
   const vc = interaction.member.voice.channel;
   if (!vc) return interaction.reply("Masuk voice channel dulu");
